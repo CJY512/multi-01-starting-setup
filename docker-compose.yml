@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  mongodb:
+    image: 'mongo'
+    # container_name: name 컨테이너 이름을 정의할 수 있음 -> default: 프로젝트파일_서비스이름_sequence
+    volumes:
+      - data:/data/db
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: 12345678
+      # - MONGO_INITDB_ROOT_USERNAME=root
+    env_file:
+      - ./env/mongo.env
+  backend:
+    build: ./backend
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile -> 이름이 Dockerfile이라면 위와 같이 경로설정만 하면 끝 / Dockerfile-dev와 같이 이름을 바꾸면 이런식으로 설정
+    #   args: -> 빌드 인자를 설정할 때 --build-arg 기억나지?
+    #     some-arg: 1
+    volumes:
+      - ./backend:/app:ro
+      - logs:/app/logs
+      - /app/node_modules
+    env_file:
+      - ./env/backend.env
+    ports:
+      - 80:80
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - 3000:3000
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+
+volumes:
+  data:
+  logs:
